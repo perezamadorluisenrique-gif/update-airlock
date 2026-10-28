@@ -28,11 +28,11 @@ class Persistence {
 	const WRITERS = array( 'file_put_contents', 'fwrite', 'fputs', 'put_contents', 'copy', 'rename', 'move', 'insert_with_markers' );
 
 	/**
-	 * Hooks that change update data.
+	 * Prefixes of the hooks that filter stored update offers (followed by update_plugins or update_themes).
 	 *
 	 * @var string[]
 	 */
-	const UPDATE_HOOKS = array( 'site_transient_update_plugins', 'site_transient_update_themes', 'pre_set_site_transient_update_plugins', 'pre_set_site_transient_update_themes', 'pre_site_transient_update_plugins', 'pre_site_transient_update_themes', 'transient_update_plugins', 'transient_update_themes' );
+	const UPDATE_HOOK_PREFIXES = array( 'site_transient_', 'pre_set_site_transient_', 'pre_site_transient_', 'transient_' );
 
 	/**
 	 * Hooks that change where packages come from.
@@ -150,12 +150,27 @@ class Persistence {
 		if ( 'all_plugins' === $hook ) {
 			return array( Catalog::make( 'priv.hide_self', $file, $line, $lines, $hook ) );
 		}
-		if ( in_array( $hook, self::UPDATE_HOOKS, true ) ) {
+		if ( self::is_update_hook( $hook ) ) {
 			return array( Catalog::make( 'hijack.update_filter', $file, $line, $lines, $hook ) );
 		}
 		if ( in_array( $hook, self::SOURCE_HOOKS, true ) ) {
 			return array( Catalog::make( 'hijack.update_source', $file, $line, $lines, $hook ) );
 		}
 		return array();
+	}
+
+	/**
+	 * Whether a hook name filters the stored update offers (prefix plus update_plugins or update_themes).
+	 *
+	 * @param string $hook Hook name.
+	 * @return bool
+	 */
+	private static function is_update_hook( string $hook ): bool {
+		foreach ( self::UPDATE_HOOK_PREFIXES as $prefix ) {
+			if ( 0 === strpos( $hook, $prefix ) && in_array( substr( $hook, strlen( $prefix ) ), array( 'update_plugins', 'update_themes' ), true ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

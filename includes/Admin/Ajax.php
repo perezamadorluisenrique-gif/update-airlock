@@ -88,8 +88,8 @@ class Ajax {
 			wp_send_json_error( array( 'message' => $zip->get_error_message() ) );
 		}
 		$token = bin2hex( random_bytes( 8 ) );
-		$work  = WP_CONTENT_DIR . '/upgrade/updlock-' . $token;
-		$fs->mkdir( Fs::remote( WP_CONTENT_DIR . '/upgrade' ), FS_CHMOD_DIR );
+		$work  = Fs::upgrade_dir() . '/updlock-' . $token;
+		$fs->mkdir( Fs::remote( Fs::upgrade_dir() ), FS_CHMOD_DIR );
 		$fs->mkdir( Fs::remote( $work ), FS_CHMOD_DIR );
 		$res = unzip_file( $zip, Fs::remote( $work ) );
 		wp_delete_file( $zip );
@@ -170,7 +170,7 @@ class Ajax {
 		Reports::persist( (int) $job['event'], $report );
 		Events::update( (int) $job['event'], array( 'state' => 'inspected' ) );
 		$fs = Fs::get();
-		if ( $fs && 0 === strpos( (string) $job['work'], WP_CONTENT_DIR . '/upgrade/updlock-' ) ) {
+		if ( $fs && 0 === strpos( (string) $job['work'], Fs::upgrade_dir() . '/updlock-' ) ) {
 			$fs->delete( Fs::remote( (string) $job['work'] ), true );
 		}
 		delete_transient( 'updlock_job_' . $token );

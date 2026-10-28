@@ -67,7 +67,7 @@ class Network {
 	 *
 	 * @var string[]
 	 */
-	const KNOWN = array( 'wordpress.org', 'w.org', 'gravatar.com', 's.w.org' );
+	const KNOWN = array( 'wordpress.org', 'w.org', 'gravatar.com' );
 
 	/**
 	 * Pulls host names out of a piece of text.

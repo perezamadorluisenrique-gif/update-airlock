@@ -56,7 +56,7 @@ class Plugin {
 			return;
 		}
 		$swap = get_option( 'updlock_swap' );
-		foreach ( (array) glob( WP_CONTENT_DIR . '/upgrade/updlock-*' ) as $path ) {
+		foreach ( (array) glob( Fs::upgrade_dir() . '/updlock-*' ) as $path ) {
 			$in_use = is_array( $swap ) && in_array( $path, array( (string) ( $swap['trash'] ?? '' ), (string) ( $swap['work'] ?? '' ) ), true );
 			if ( ! $in_use && time() - (int) filemtime( $path ) > DAY_IN_SECONDS ) {
 				$fs->delete( Fs::remote( $path ), true );

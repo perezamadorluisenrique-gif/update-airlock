@@ -98,9 +98,9 @@ class Restorer {
 	private static function swap( $fs, array $entry, array $manifest, string $zip, string $kind, string $slug ) {
 		$target = Fs::root( $kind ) . '/' . $slug;
 		$token  = bin2hex( random_bytes( 6 ) );
-		$work   = WP_CONTENT_DIR . '/upgrade/updlock-restore-' . $token;
-		$trash  = WP_CONTENT_DIR . '/upgrade/updlock-trash-' . $token;
-		$fs->mkdir( Fs::remote( WP_CONTENT_DIR . '/upgrade' ), FS_CHMOD_DIR );
+		$work   = Fs::upgrade_dir() . '/updlock-restore-' . $token;
+		$trash  = Fs::upgrade_dir() . '/updlock-trash-' . $token;
+		$fs->mkdir( Fs::remote( Fs::upgrade_dir() ), FS_CHMOD_DIR );
 		$fs->mkdir( Fs::remote( $work ), FS_CHMOD_DIR );
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';

@@ -81,4 +81,13 @@ class Fs {
 		}
 		return $local;
 	}
+
+	/**
+	 * Core's working folder for upgrades; restores and inspections unpack here so a rename stays on one disk.
+	 *
+	 * @return string Local path without a trailing slash.
+	 */
+	public static function upgrade_dir(): string {
+		return untrailingslashit( WP_CONTENT_DIR ) . '/upgrade';
+	}
 }
