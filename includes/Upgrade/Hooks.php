@@ -35,9 +35,17 @@ class Hooks {
 	private static $runs = array();
 
 	/**
+	 * Whether the current package may replace an existing folder.
+	 *
+	 * @var bool
+	 */
+	private static $clear = false;
+
+	/**
 	 * Registers the hooks.
 	 */
 	public static function register(): void {
+		add_filter( 'upgrader_package_options', array( __CLASS__, 'package_options' ), 99 );
 		add_filter( 'upgrader_pre_install', array( __CLASS__, 'pre_install' ), 5, 2 );
 		add_filter( 'upgrader_source_selection', array( __CLASS__, 'source_selection' ), 20, 4 );
 		add_filter( 'upgrader_install_package_result', array( __CLASS__, 'package_result' ), 20, 2 );
@@ -59,6 +67,10 @@ class Hooks {
 			return null;
 		}
 		$type = $extra['type'] ?? '';
+		if ( '' === $type ) {
+			// Bulk upgrades (WP-CLI, auto-updates) pass only the item key.
+			$type = ! empty( $extra['plugin'] ) ? 'plugin' : ( ! empty( $extra['theme'] ) ? 'theme' : '' );
+		}
 		if ( 'plugin' === $type && ! empty( $extra['plugin'] ) ) {
 			$plugin = (string) $extra['plugin'];
 			$slug   = '.' === dirname( $plugin ) ? basename( $plugin ) : dirname( $plugin );
@@ -169,6 +181,17 @@ class Hooks {
 	}
 
 	/**
+	 * Remembers whether the install may replace an existing folder (an upload over an installed item).
+	 *
+	 * @param mixed $options Package options.
+	 * @return mixed
+	 */
+	public static function package_options( $options ) {
+		self::$clear = is_array( $options ) && ! empty( $options['clear_destination'] );
+		return $options;
+	}
+
+	/**
 	 * Before core touches the files: takes the snapshot.
 	 *
 	 * @param mixed $response Filter value (true, or an error from an earlier filter).
@@ -203,7 +226,7 @@ class Hooks {
 			return $source;
 		}
 		$item = self::item( $extra );
-		if ( ! $item && is_array( $extra ) && 'install' === ( $extra['action'] ?? '' ) && in_array( $extra['type'] ?? '', array( 'plugin', 'theme' ), true ) && ! empty( $upgrader->skin->overwrite ) ) {
+		if ( ! $item && is_array( $extra ) && 'install' === ( $extra['action'] ?? '' ) && in_array( $extra['type'] ?? '', array( 'plugin', 'theme' ), true ) && ( self::$clear || ! empty( $upgrader->skin->overwrite ) ) ) {
 			$item = self::uploaded_item( (string) $extra['type'], $source );
 			if ( $item ) {
 				$result = self::begin_run( $item[0], $item[1], $item[2], 'upload' );

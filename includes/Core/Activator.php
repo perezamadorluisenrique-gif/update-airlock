@@ -78,7 +78,7 @@ class Activator {
   to_ver varchar(60) NOT NULL DEFAULT '',
   trigger_by varchar(12) NOT NULL DEFAULT 'manual',
   risk varchar(10) NOT NULL DEFAULT '',
-  state varchar(20) NOT NULL DEFAULT 'new',
+  state varchar(32) NOT NULL DEFAULT 'new',
   user_id bigint(20) unsigned NOT NULL DEFAULT 0,
   created_at datetime NULL DEFAULT NULL,
   updated_at datetime NULL DEFAULT NULL,

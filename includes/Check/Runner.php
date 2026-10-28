@@ -130,7 +130,8 @@ class Runner {
 			$todo[ $url ] = add_query_arg( 'updlock_check', wp_rand( 1000, 999999 ), $url );
 		}
 		$parallel = array();
-		if ( count( $todo ) > 1 && class_exists( '\WpOrg\Requests\Requests' ) ) {
+		// Requests bypasses the HTTP API filters, so a site that intercepts requests there gets the sequential path.
+		if ( count( $todo ) > 1 && class_exists( '\WpOrg\Requests\Requests' ) && ! has_filter( 'pre_http_request' ) ) {
 			$parallel = self::parallel( $todo, $admin_url );
 		}
 		foreach ( $todo as $url => $request_url ) {

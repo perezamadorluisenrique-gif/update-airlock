@@ -212,7 +212,9 @@ class Verifier {
 			);
 			return;
 		}
-		$confirm = self::measure( $entry );
+		// Only errors after the restore count: the failed version's own errors are already in the evidence.
+		$entry['log_offset'] = Error_Log::offset();
+		$confirm             = self::measure( $entry );
 		self::save_checks( $event_id, $confirm, 'retry' );
 		Holds::add( (string) $entry['kind'], (string) $entry['slug'], (string) $entry['to'], $event_id, __( 'Checks failed after the update.', 'update-airlock' ) );
 		self::finish( $event_id, $entry, 'rolled_back', array( 'confirm_verdict' => $confirm['verdict'] ) );
