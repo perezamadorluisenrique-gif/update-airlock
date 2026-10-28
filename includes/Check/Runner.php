@@ -265,8 +265,15 @@ class Runner {
 	public static function missing_assets( array $assets ): array {
 		$missing = array();
 		foreach ( $assets as $asset ) {
-			$res = wp_remote_head( $asset, self::args( false ) );
+			// Follow redirects: a missing file on a site with pretty permalinks is often redirected to a guessed page.
+			$res = wp_remote_head( $asset, array_merge( self::args( false ), array( 'redirection' => 3 ) ) );
 			if ( is_wp_error( $res ) || (int) wp_remote_retrieve_response_code( $res ) >= 400 ) {
+				$missing[] = $asset;
+				continue;
+			}
+			// With pretty permalinks a missing file can fall through to WordPress and come back as an HTML page.
+			$type = strtolower( (string) wp_remote_retrieve_header( $res, 'content-type' ) );
+			if ( false !== strpos( $type, 'text/html' ) && preg_match( '/\.(js|css)(\?|$)/i', $asset ) ) {
 				$missing[] = $asset;
 			}
 		}

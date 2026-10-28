@@ -47,3 +47,8 @@
 .updlock-widget { margin: 0 0 1em; }
 .updlock-widget li { margin: 4px 0; }
 .updlock-filters { margin: 12px 0; }
+
+/* Wide tables scroll inside the screen instead of widening the page on phones. */
+.updlock-root {
+	overflow-x: auto;
+}

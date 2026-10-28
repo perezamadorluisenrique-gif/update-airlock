@@ -53,6 +53,7 @@ $WP core install --url="$URL" --title=E2E --admin_user=admin --admin_password=ad
 $WP post create --post_title="E2E post" --post_status=publish --post_content="Hello" >/dev/null 2>&1
 $WP plugin activate update-airlock fx-benign fx-fatal fx-evil fx-assets >/dev/null 2>&1
 $WP theme activate twentytwentyfive >/dev/null 2>&1 || true
+[ -n "${PRETTY:-}" ] && $WP rewrite structure "/%year%/%monthnum%/%day%/%postname%/" >/dev/null 2>&1
 echo "WordPress $($WP core version 2>/dev/null) on SQLite at $URL"
 
 PHP_CLI_SERVER_WORKERS=4 php -S "localhost:$PORT" -t "$SITE" >"$ROOT/build/e2e-server.log" 2>&1 &
