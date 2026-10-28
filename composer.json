@@ -1,0 +1,29 @@
+{
+	"name": "perezamadorluisenrique-gif/update-airlock",
+	"description": "Checks plugin and theme updates for risky code changes, keeps a snapshot, tests the site afterward and rolls back when a check fails.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"php": ">=7.4"
+	},
+	"require-dev": {
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"johnpbloch/wordpress-core": "^6.8",
+		"phpcompatibility/phpcompatibility-wp": "^2.1",
+		"phpunit/phpunit": "^9.6",
+		"wp-coding-standards/wpcs": "^3.1"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		},
+		"platform": {
+			"php": "7.4.33"
+		}
+	},
+	"scripts": {
+		"lint": "find . -name '*.php' -not -path './vendor/*' -not -path './build/*' -print0 | xargs -0 -n1 php -l",
+		"phpcs": "phpcs",
+		"test": "phpunit"
+	}
+}
