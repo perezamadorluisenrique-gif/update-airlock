@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Updlock\Upgrade;
 
+use Updlock\Core\Fs;
 use Updlock\Check\Error_Log;
 use Updlock\Check\Evaluator;
 use Updlock\Check\Runner;
@@ -58,7 +59,7 @@ class Verifier {
 		if ( ! $entry || 'verifying' !== $entry['state'] ) {
 			return false;
 		}
-		if ( file_exists( ABSPATH . '.maintenance' ) ) {
+		if ( Fs::maintenance() ) {
 			self::schedule( 120 );
 			return false;
 		}
@@ -107,6 +108,11 @@ class Verifier {
 	 * @return array<string,mixed> Evaluator result.
 	 */
 	private static function measure( array $entry ): array {
+		$root = Fs::root( (string) $entry['kind'] ) . '/' . $entry['slug'];
+		if ( is_dir( $root ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			wp_opcache_invalidate_directory( $root );
+		}
 		$baseline = Runner::baseline();
 		$urls     = array_keys( Runner::urls() );
 		$admin    = Runner::admin_url();
@@ -124,7 +130,9 @@ class Verifier {
 				}
 			}
 		}
-		$needle = ( 'plugin' === $entry['kind'] ? '/plugins/' : '/themes/' ) . $entry['slug'];
+		// A trailing slash keeps "foo" from matching "foo-pro"; a single-file plugin matches its file name.
+		$single = 'plugin' === $entry['kind'] && '.' === dirname( (string) $entry['plugin'] );
+		$needle = ( 'plugin' === $entry['kind'] ? '/plugins/' : '/themes/' ) . ( $single ? (string) $entry['plugin'] : $entry['slug'] . '/' );
 		$log    = Error_Log::since( (int) ( $entry['log_offset'] ?? -1 ), $needle );
 		return Evaluator::judge( $baseline['urls'], $after, $log, $missing, home_url( '/' ) );
 	}

@@ -141,6 +141,10 @@ class Restorer {
 		$fs->delete( Fs::remote( $trash ), true );
 		$fs->delete( Fs::remote( $work ), true );
 		delete_option( self::SWAP );
+		// Renames do not refresh the code cache; without this the old files can run for a few more seconds.
+		if ( is_dir( $target ) ) {
+			wp_opcache_invalidate_directory( $target );
+		}
 		return true;
 	}
 

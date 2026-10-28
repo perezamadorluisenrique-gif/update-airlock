@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Updlock\Check;
 
+use Updlock\Core\Fs;
 use Updlock\Core\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -142,6 +143,15 @@ class Runner {
 			}
 			$response        = wp_remote_get( $request_url, self::args( $url === $admin_url ) );
 			$results[ $url ] = self::metrics( $response, (int) round( ( microtime( true ) - $start ) * 1000 ), $asset_prefix, $url );
+		}
+		// A burst of requests can make a small host answer 5xx once; look again alone before judging.
+		foreach ( $results as $url => $metrics ) {
+			if ( (int) ( $metrics['status'] ?? 0 ) >= 500 && empty( $metrics['maint'] ) ) {
+				usleep( 700000 );
+				$start           = microtime( true );
+				$response        = wp_remote_get( $todo[ $url ], self::args( $url === $admin_url ) );
+				$results[ $url ] = self::metrics( $response, (int) round( ( microtime( true ) - $start ) * 1000 ), $asset_prefix, $url );
+			}
 		}
 		return $results;
 	}
@@ -299,7 +309,7 @@ class Runner {
 	 * @return array{ts:int,urls:array<string,array<string,mixed>>}
 	 */
 	public static function refresh_baseline(): array {
-		if ( file_exists( ABSPATH . '.maintenance' ) ) {
+		if ( Fs::maintenance() ) {
 			return self::baseline();
 		}
 		$urls  = array_keys( self::urls() );

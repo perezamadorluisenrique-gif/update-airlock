@@ -30,7 +30,7 @@ By default, an automatic update rated High is held for review, and a manual upda
 
 **During the update: a snapshot**
 
-Before each plugin or theme update, the installed folder is saved as a zip with a list of file hashes, in a folder inside wp-content that has a random name and server rules that deny direct access. The number of snapshots kept per plugin or theme is a setting. If a snapshot cannot be made, the update is cancelled (you can turn that off).
+Before each plugin or theme update, the installed folder is saved as a zip with a list of file hashes, in a folder inside wp-content that has a random name and, on Apache and IIS, rules that deny direct access. On nginx those rules do nothing, so only the random folder name protects the files; the saved plugin options can contain keys, so deny that folder in your nginx configuration if you can. The number of snapshots kept per plugin or theme is a setting. If a snapshot cannot be made, the update is cancelled (you can turn that off).
 
 **After the update: checks and rollback**
 

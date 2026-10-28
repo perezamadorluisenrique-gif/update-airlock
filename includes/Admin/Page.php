@@ -77,8 +77,11 @@ class Page {
 			wp_safe_redirect( Labels::url( array( 'tab' => 'welcome' ) ) );
 			exit;
 		}
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			return;
+		}
 		Restorer::recover();
-		if ( current_user_can( 'update_plugins' ) && Journal::pending() ) {
+		if ( Journal::pending() ) {
 			Verifier::run_pending();
 		}
 	}

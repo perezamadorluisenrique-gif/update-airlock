@@ -203,7 +203,7 @@ class Ajax {
 		if ( ! in_array( $url, $urls, true ) ) {
 			wp_send_json_error( array( 'message' => __( 'Unknown page.', 'update-airlock' ) ) );
 		}
-		if ( file_exists( ABSPATH . '.maintenance' ) ) {
+		if ( Fs::maintenance() ) {
 			wp_send_json_error( array( 'message' => __( 'The site is in maintenance mode.', 'update-airlock' ) ) );
 		}
 		$res                  = Runner::fetch( array( $url ) );

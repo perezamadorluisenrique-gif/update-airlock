@@ -90,4 +90,23 @@ class Fs {
 	public static function upgrade_dir(): string {
 		return untrailingslashit( WP_CONTENT_DIR ) . '/upgrade';
 	}
+
+	/**
+	 * Whether core's maintenance file is present and fresh (core ignores it after ten minutes).
+	 *
+	 * Reads the timestamp instead of calling wp_is_maintenance_mode(), which tools such as WP-CLI switch off.
+	 *
+	 * @return bool
+	 */
+	public static function maintenance(): bool {
+		$file = ABSPATH . '.maintenance';
+		if ( ! file_exists( $file ) ) {
+			return false;
+		}
+		$text = (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reads core's own maintenance file.
+		if ( ! preg_match( '/\$upgrading\s*=\s*(\d+)/', $text, $m ) ) {
+			return true;
+		}
+		return ( time() - (int) $m[1] ) < 10 * MINUTE_IN_SECONDS;
+	}
 }

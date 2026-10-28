@@ -74,7 +74,8 @@ class Hooks {
 		if ( 'plugin' === $type && ! empty( $extra['plugin'] ) ) {
 			$plugin = (string) $extra['plugin'];
 			$slug   = '.' === dirname( $plugin ) ? basename( $plugin ) : dirname( $plugin );
-			return Fs::valid_slug( $slug ) ? array( 'plugin', $slug, $plugin ) : null;
+			// Never snapshot or roll back this plugin's own folder while it is running.
+			return Fs::valid_slug( $slug ) && 'update-airlock' !== $slug ? array( 'plugin', $slug, $plugin ) : null;
 		}
 		if ( 'theme' === $type && ! empty( $extra['theme'] ) && Fs::valid_slug( (string) $extra['theme'] ) ) {
 			return array( 'theme', (string) $extra['theme'], '' );
@@ -255,7 +256,7 @@ class Hooks {
 	 */
 	private static function uploaded_item( string $kind, string $source ) {
 		$slug = basename( untrailingslashit( $source ) );
-		if ( ! Fs::valid_slug( $slug ) || ! is_dir( Fs::root( $kind ) . '/' . $slug ) ) {
+		if ( ! Fs::valid_slug( $slug ) || 'update-airlock' === $slug || ! is_dir( Fs::root( $kind ) . '/' . $slug ) ) {
 			return null;
 		}
 		$plugin = '';

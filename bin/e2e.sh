@@ -56,7 +56,7 @@ $WP theme activate twentytwentyfive >/dev/null 2>&1 || true
 [ -n "${PRETTY:-}" ] && $WP rewrite structure "/%year%/%monthnum%/%day%/%postname%/" >/dev/null 2>&1
 echo "WordPress $($WP core version 2>/dev/null) on SQLite at $URL"
 
-PHP_CLI_SERVER_WORKERS=4 php -S "localhost:$PORT" -t "$SITE" >"$ROOT/build/e2e-server.log" 2>&1 &
+PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=0 -S "localhost:$PORT" -t "$SITE" >"$ROOT/build/e2e-server.log" 2>&1 &
 SERVER=$!
 trap 'kill $SERVER 2>/dev/null' EXIT
 for _ in $(seq 1 50); do curl -s -o /dev/null "$URL/wp-login.php" && break; sleep 0.2; done
