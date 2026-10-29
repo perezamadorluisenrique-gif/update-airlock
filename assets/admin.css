@@ -1,0 +1,54 @@
+.updlock-root .updlock-muted,
+.updlock-row .updlock-muted,
+.updlock-panel .updlock-muted { color: #646970; }
+.updlock-root .updlock-inline { display: inline-block; margin: 0 4px 4px 0; }
+.updlock-badge,
+.updlock-state,
+.updlock-sev,
+.updlock-tag {
+	display: inline-block;
+	padding: 1px 8px;
+	border-radius: 10px;
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: 600;
+	background: #f0f0f1;
+	color: #1d2327;
+	border: 1px solid #c3c4c7;
+}
+.updlock-badge-low { background: #edfaef; border-color: #68de7c; color: #00450c; }
+.updlock-badge-review { background: #fcf9e8; border-color: #dba617; color: #4f3a00; }
+.updlock-badge-high { background: #fcf0f1; border-color: #d63638; color: #6a0c0e; }
+.updlock-badge-none { background: #f6f7f7; color: #50575e; }
+.updlock-state-good { background: #edfaef; border-color: #68de7c; color: #00450c; }
+.updlock-state-warn { background: #fcf9e8; border-color: #dba617; color: #4f3a00; }
+.updlock-sev-high { background: #fcf0f1; border-color: #d63638; color: #6a0c0e; }
+.updlock-sev-medium { background: #fcf9e8; border-color: #dba617; color: #4f3a00; }
+.updlock-row { display: inline-block; margin-left: 6px; }
+.updlock-panel { margin: 1em 0; padding: 0 16px 12px; background: #fff; border: 1px solid #c3c4c7; }
+.updlock-reasons { list-style: disc; margin-left: 20px; }
+.updlock-files { list-style: none; margin: 0; padding: 0; }
+.updlock-files li { margin: 2px 0; }
+.updlock-checklist { list-style: none; margin: 0 0 1em; padding: 0; }
+.updlock-checklist li { margin: 4px 0; }
+.updlock-checklist .updlock-ok::before { content: "\2713  "; color: #007017; }
+.updlock-checklist .updlock-bad::before { content: "!  "; color: #b32d2e; font-weight: 700; }
+.updlock-result { margin-left: 8px; font-weight: 600; }
+.updlock-pre { background: #f6f7f7; padding: 8px; overflow: auto; white-space: pre-wrap; }
+.updlock-diff { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 12px; background: #fff; }
+.updlock-diff td { vertical-align: top; padding: 1px 6px; border-bottom: 1px solid #f0f0f1; }
+.updlock-diff .updlock-ln { width: 44px; color: #8c8f94; text-align: right; user-select: none; }
+.updlock-diff .updlock-code { width: 50%; word-break: break-all; white-space: pre-wrap; }
+.updlock-diff .updlock-code code { background: none; padding: 0; }
+.updlock-diff .updlock-del { background: #fcf0f1; }
+.updlock-diff .updlock-add { background: #edfaef; }
+.updlock-diff .updlock-diff-gap td { background: #f6f7f7; color: #8c8f94; text-align: center; }
+.updlock-diff .updlock-flag { display: inline-block; margin-left: 8px; padding: 0 6px; border-radius: 3px; background: #d63638; color: #fff; font-size: 11px; }
+.updlock-widget { margin: 0 0 1em; }
+.updlock-widget li { margin: 4px 0; }
+.updlock-filters { margin: 12px 0; }
+
+/* Wide tables scroll inside the screen instead of widening the page on phones. */
+.updlock-root {
+	overflow-x: auto;
+}
