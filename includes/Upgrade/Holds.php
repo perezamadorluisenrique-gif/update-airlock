@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Updlock\Upgrade;
 
+use Updlock\Core\Opt;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -26,7 +28,7 @@ class Holds {
 	 * @return array<string,array<string,mixed>>
 	 */
 	public static function all(): array {
-		$all = get_option( self::OPTION, array() );
+		$all = Opt::get( self::OPTION, array() );
 		return is_array( $all ) ? $all : array();
 	}
 
@@ -47,7 +49,7 @@ class Holds {
 			'reason'   => $reason,
 			'ts'       => time(),
 		);
-		update_option( self::OPTION, $all, false );
+		Opt::set( self::OPTION, $all, false );
 	}
 
 	/**
@@ -59,7 +61,7 @@ class Holds {
 	public static function release( string $kind, string $slug ): void {
 		$all = self::all();
 		unset( $all[ $kind . '|' . $slug ] );
-		update_option( self::OPTION, $all, false );
+		Opt::set( self::OPTION, $all, false );
 	}
 
 	/**
@@ -100,7 +102,7 @@ class Holds {
 	 * @return array<string,int>
 	 */
 	public static function confirmed(): array {
-		$all = get_option( 'updlock_confirmed', array() );
+		$all = Opt::get( 'updlock_confirmed', array() );
 		return is_array( $all ) ? $all : array();
 	}
 
@@ -119,7 +121,7 @@ class Holds {
 				unset( $all[ $key ] );
 			}
 		}
-		update_option( 'updlock_confirmed', $all, false );
+		Opt::set( 'updlock_confirmed', $all, false );
 		self::release( $kind, $slug );
 	}
 

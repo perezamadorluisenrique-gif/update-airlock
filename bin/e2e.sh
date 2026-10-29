@@ -3,6 +3,7 @@
 #
 #   bin/e2e.sh                 # WordPress 7.1.3
 #   WP_VERSION=6.6 bin/e2e.sh  # oldest supported
+#   MULTISITE=1 bin/e2e.sh     # network of two sites (sub-directory), plugin network-activated
 #
 # Needs: php (pdo_sqlite, zip), git, curl, node + Playwright (for the screen walkthrough; set NODE_PATH to the global install).
 set -uo pipefail
@@ -50,20 +51,34 @@ PHP
 
 WP="php $CACHE/wp-cli.phar --allow-root --path=$SITE"
 $WP core install --url="$URL" --title=E2E --admin_user=admin --admin_password=admin --admin_email=admin@example.com --skip-email >/dev/null 2>&1
+if [ -n "${MULTISITE:-}" ]; then
+	# Our wp-config has no "stop editing" marker, so wp-cli cannot add the constants itself.
+	$WP core multisite-convert --title=E2E-network >/dev/null 2>&1
+	sed -i "s#^if ( ! defined( 'ABSPATH' ) )#define( 'MULTISITE', true ); define( 'SUBDOMAIN_INSTALL', false ); define( 'DOMAIN_CURRENT_SITE', 'localhost:$PORT' ); define( 'PATH_CURRENT_SITE', '/' ); define( 'SITE_ID_CURRENT_SITE', 1 ); define( 'BLOG_ID_CURRENT_SITE', 1 );\n&#" "$SITE/wp-config.php"
+	$WP core is-installed --network || { echo "multisite setup failed"; exit 1; }
+	$WP site create --slug=two --title=Two --email=admin@example.com >/dev/null 2>&1
+fi
 $WP post create --post_title="E2E post" --post_status=publish --post_content="Hello" >/dev/null 2>&1
-$WP plugin activate update-airlock fx-benign fx-fatal fx-evil fx-assets >/dev/null 2>&1
+if [ -n "${MULTISITE:-}" ]; then
+	$WP plugin activate --network update-airlock fx-benign fx-fatal fx-evil fx-assets >/dev/null 2>&1
+else
+	$WP plugin activate update-airlock fx-benign fx-fatal fx-evil fx-assets >/dev/null 2>&1
+fi
 $WP theme activate twentytwentyfive >/dev/null 2>&1 || true
 [ -n "${PRETTY:-}" ] && $WP rewrite structure "/%year%/%monthnum%/%day%/%postname%/" >/dev/null 2>&1
 echo "WordPress $($WP core version 2>/dev/null) on SQLite at $URL"
 
 PHP_CLI_SERVER_WORKERS=4 php -d opcache.enable=0 -S "localhost:$PORT" -t "$SITE" >"$ROOT/build/e2e-server.log" 2>&1 &
 SERVER=$!
-trap 'kill $SERVER 2>/dev/null' EXIT
+trap 'pkill -P $SERVER 2>/dev/null; kill $SERVER 2>/dev/null' EXIT
 for _ in $(seq 1 50); do curl -s -o /dev/null "$URL/wp-login.php" && break; sleep 0.2; done
 
-export SITE WP URL ROOT PORT
+export SITE WP URL ROOT PORT MULTISITE
 bash tests/e2e/scenarios.sh
 RESULT=$?
+if [ -n "${MULTISITE:-}" ]; then
+	bash tests/e2e/multisite.sh || RESULT=1
+fi
 if [ -f tests/e2e/ui.mjs ] && [ -z "${SKIP_UI:-}" ]; then
 	WP_PATH="$SITE" WP_CLI="$WP" BASE_URL="$URL" SHOTS="${SHOTS:-}" node tests/e2e/ui.mjs || RESULT=1
 fi

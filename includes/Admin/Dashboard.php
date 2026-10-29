@@ -25,14 +25,14 @@ class Dashboard {
 	 * Registers the widget.
 	 */
 	public static function register(): void {
-		add_action( 'wp_dashboard_setup', array( __CLASS__, 'setup' ) );
+		add_action( is_multisite() ? 'wp_network_dashboard_setup' : 'wp_dashboard_setup', array( __CLASS__, 'setup' ) );
 	}
 
 	/**
 	 * Adds the widget for users who can update plugins.
 	 */
 	public static function setup(): void {
-		if ( current_user_can( 'update_plugins' ) ) {
+		if ( current_user_can( Labels::cap() ) ) {
 			wp_add_dashboard_widget( 'updlock_dashboard', __( 'Update Airlock', 'update-airlock' ), array( __CLASS__, 'render' ) );
 		}
 	}

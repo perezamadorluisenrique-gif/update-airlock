@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Updlock\Check;
 
 use Updlock\Core\Fs;
+use Updlock\Core\Opt;
 use Updlock\Core\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -296,7 +297,7 @@ class Runner {
 	 * @return array{ts:int,urls:array<string,array<string,mixed>>}
 	 */
 	public static function baseline(): array {
-		$base = get_option( self::BASELINE, array() );
+		$base = Opt::get( self::BASELINE, array() );
 		return is_array( $base ) && isset( $base['urls'] ) ? $base : array(
 			'ts'   => 0,
 			'urls' => array(),
@@ -321,7 +322,7 @@ class Runner {
 			'ts'   => time(),
 			'urls' => self::fetch( $urls ),
 		);
-		update_option( self::BASELINE, $data, false );
+		Opt::set( self::BASELINE, $data, false );
 		return $data;
 	}
 

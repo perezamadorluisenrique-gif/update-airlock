@@ -9,11 +9,12 @@ declare(strict_types=1);
 
 namespace Updlock\Upgrade;
 
-use Updlock\Core\Fs;
 use Updlock\Check\Error_Log;
 use Updlock\Check\Evaluator;
 use Updlock\Check\Runner;
 use Updlock\Core\Events;
+use Updlock\Core\Fs;
+use Updlock\Core\Opt;
 use Updlock\Core\Settings;
 use Updlock\Notify\Mailer;
 use Updlock\Snapshot\Restorer;
@@ -76,13 +77,33 @@ class Verifier {
 		if ( ! \WP_Upgrader::create_lock( self::LOCK, 600 ) ) {
 			return false;
 		}
+		// Another request may have judged this update between the first read and the lock.
+		$entry = Journal::get( $event_id );
+		if ( ! $entry || 'verifying' !== $entry['state'] ) {
+			\WP_Upgrader::release_lock( self::LOCK );
+			return false;
+		}
 		if ( function_exists( 'set_time_limit' ) ) {
 			set_time_limit( 300 ); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged, WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_set_time_limit -- Checks make several page requests and must not be cut short.
 		}
-		$judged = self::measure( $entry );
-		self::save_checks( $event_id, $judged, 'after' );
-		\WP_Upgrader::release_lock( self::LOCK );
+		try {
+			$judged = self::measure( $entry );
+			self::save_checks( $event_id, $judged, 'after' );
+			self::conclude( $event_id, $entry, $judged );
+		} finally {
+			\WP_Upgrader::release_lock( self::LOCK );
+		}
+		return true;
+	}
 
+	/**
+	 * Applies the verdict while the verify lock is still held.
+	 *
+	 * @param int                 $event_id Event id.
+	 * @param array<string,mixed> $entry    Journal entry.
+	 * @param array<string,mixed> $judged   Evaluator result.
+	 */
+	private static function conclude( int $event_id, array $entry, array $judged ): void {
 		$verdict = $judged['verdict'];
 		if ( 'fail' === $verdict ) {
 			if ( Settings::get( 'auto_rollback' ) && ! empty( $entry['snapshot'] ) ) {
@@ -98,7 +119,6 @@ class Verifier {
 			self::refresh_baseline( $judged );
 			self::finish( $event_id, $entry, 'committed', array( 'verdict' => $verdict ) );
 		}
-		return true;
 	}
 
 	/**
@@ -109,8 +129,8 @@ class Verifier {
 	 */
 	private static function measure( array $entry ): array {
 		$root = Fs::root( (string) $entry['kind'] ) . '/' . $entry['slug'];
-		if ( is_dir( $root ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
+		// Core's helper reads the global filesystem object, which exists only after Fs::get() has set it up.
+		if ( is_dir( $root ) && Fs::get() ) {
 			wp_opcache_invalidate_directory( $root );
 		}
 		$baseline = Runner::baseline();
@@ -194,7 +214,7 @@ class Verifier {
 			}
 		}
 		$base['ts'] = time();
-		update_option( Runner::BASELINE, $base, false );
+		Opt::set( Runner::BASELINE, $base, false );
 	}
 
 	/**

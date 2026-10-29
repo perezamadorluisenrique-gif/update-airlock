@@ -398,8 +398,13 @@ class Views {
 	 */
 	public static function settings(): void {
 		$s = Settings::all();
-		echo '<form method="post" action="options.php">';
-		settings_fields( 'updlock_settings_group' );
+		if ( is_multisite() ) {
+			echo '<form method="post" action="' . esc_url( network_admin_url( 'edit.php?action=updlock_settings' ) ) . '">';
+			wp_nonce_field( 'updlock_settings_group-options' );
+		} else {
+			echo '<form method="post" action="options.php">';
+			settings_fields( 'updlock_settings_group' );
+		}
 		echo '<table class="form-table" role="presentation"><tbody>';
 		$flags = array(
 			'hold_auto_high'      => __( 'Hold automatic updates rated High for review', 'update-airlock' ),

@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Updlock\Upgrade;
 
+use Updlock\Core\Opt;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -35,7 +37,7 @@ class Journal {
 	 * @return array<int,array<string,mixed>>
 	 */
 	public static function all(): array {
-		$all = get_option( self::OPTION, array() );
+		$all = Opt::get( self::OPTION, array() );
 		return is_array( $all ) ? $all : array();
 	}
 
@@ -60,7 +62,7 @@ class Journal {
 		$all              = self::all();
 		$entry['updated'] = time();
 		$all[ $event_id ] = $entry;
-		update_option( self::OPTION, self::trim( $all ), false );
+		Opt::set( self::OPTION, self::trim( $all ), false );
 	}
 
 	/**

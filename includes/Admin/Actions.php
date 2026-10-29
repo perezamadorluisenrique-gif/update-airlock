@@ -41,7 +41,7 @@ class Actions {
 	 */
 	private static function guard( string $action, string $kind = '' ): void {
 		check_admin_referer( 'updlock_' . $action );
-		$cap = 'theme' === $kind ? 'update_themes' : 'update_plugins';
+		$cap = Labels::cap( $kind );
 		if ( ! current_user_can( $cap ) ) {
 			wp_die( esc_html__( 'You are not allowed to do this.', 'update-airlock' ), 403 );
 		}
@@ -87,7 +87,7 @@ class Actions {
 		$version = isset( $_POST['version'] ) ? sanitize_text_field( wp_unslash( $_POST['version'] ) ) : '';
 		$event   = isset( $_POST['event'] ) ? absint( $_POST['event'] ) : 0;
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
-		if ( ! current_user_can( 'theme' === $kind ? 'update_themes' : 'update_plugins' ) || ! Fs::valid_slug( $slug ) || '' === $version ) {
+		if ( ! current_user_can( Labels::cap( $kind ) ) || ! Fs::valid_slug( $slug ) || '' === $version ) {
 			wp_die( esc_html__( 'You are not allowed to do this.', 'update-airlock' ), 403 );
 		}
 		Holds::confirm( $kind, $slug, $version );
@@ -103,7 +103,7 @@ class Actions {
 	public static function release(): void {
 		check_admin_referer( 'updlock_release' );
 		list( $kind, $slug ) = self::item();
-		if ( ! current_user_can( 'theme' === $kind ? 'update_themes' : 'update_plugins' ) ) {
+		if ( ! current_user_can( Labels::cap( $kind ) ) ) {
 			wp_die( esc_html__( 'You are not allowed to do this.', 'update-airlock' ), 403 );
 		}
 		Holds::release( $kind, $slug );
@@ -122,17 +122,14 @@ class Actions {
 	 * Restores a snapshot.
 	 */
 	public static function rollback(): void {
-		self::guard( 'rollback' );
-		// phpcs:disable WordPress.Security.NonceVerification.Missing -- guard() verified the nonce.
-		$id           = isset( $_POST['snapshot'] ) ? sanitize_key( wp_unslash( $_POST['snapshot'] ) ) : '';
+		// phpcs:disable WordPress.Security.NonceVerification.Missing -- guard() verifies the nonce before anything else runs.
+		$id    = isset( $_POST['snapshot'] ) ? sanitize_key( wp_unslash( $_POST['snapshot'] ) ) : '';
+		$entry = Store::get( $id );
+		self::guard( 'rollback', $entry ? (string) $entry['kind'] : '' );
 		$with_options = ! empty( $_POST['options'] );
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
-		$entry = Store::get( $id );
 		if ( ! $entry ) {
 			self::back( __( 'That snapshot is not available.', 'update-airlock' ), 'error' );
-		}
-		if ( 'theme' === $entry['kind'] && ! current_user_can( 'update_themes' ) ) {
-			wp_die( esc_html__( 'You are not allowed to do this.', 'update-airlock' ), 403 );
 		}
 		$result = Restorer::restore( $id, $with_options );
 		if ( is_wp_error( $result ) ) {
@@ -186,8 +183,9 @@ class Actions {
 	 * Deletes a snapshot.
 	 */
 	public static function delete_snapshot(): void {
-		self::guard( 'delete_snapshot' );
-		$id = isset( $_POST['snapshot'] ) ? sanitize_key( wp_unslash( $_POST['snapshot'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- guard() verified the nonce.
+		$id    = isset( $_POST['snapshot'] ) ? sanitize_key( wp_unslash( $_POST['snapshot'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- guard() verifies the nonce before anything is changed.
+		$entry = Store::get( $id );
+		self::guard( 'delete_snapshot', $entry ? (string) $entry['kind'] : '' );
 		Store::delete( $id );
 		self::back( __( 'Deleted.', 'update-airlock' ), 'success', Labels::url( array( 'tab' => 'snapshots' ) ) );
 	}

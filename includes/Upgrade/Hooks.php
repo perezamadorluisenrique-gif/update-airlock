@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Updlock\Upgrade;
 
+use Updlock\Admin\Labels;
 use Updlock\Check\Error_Log;
 use Updlock\Core\Events;
 use Updlock\Core\Fs;
@@ -347,14 +348,16 @@ class Hooks {
 				activate_plugin( (string) $entry['plugin'], '', ! empty( $entry['network'] ), true );
 			}
 		}
-		$link = admin_url( 'tools.php?page=update-airlock&view=event&id=' . $event_id );
+		$link = Labels::event_url( $event_id );
 		if ( $mail ) {
 			$event = Events::get( $event_id );
 			if ( $event ) {
 				Mailer::alert( __( 'Held an update for review', 'update-airlock' ), $event, array( $message ) );
 			}
 		}
-		return new \WP_Error( 'updlock_' . $state, $message . ' ' . $link );
+		// Plain text for WP-CLI and cron logs; a link in the message is escaped to text on the update screen.
+		$text = ( defined( 'WP_CLI' ) && WP_CLI ) ? $message . ' ' . $link : $message;
+		return new \WP_Error( 'updlock_' . $state, $text, array( 'url' => $link ) );
 	}
 
 	/**

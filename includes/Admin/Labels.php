@@ -110,6 +110,35 @@ class Labels {
 	 * @return string
 	 */
 	public static function url( array $args = array() ): string {
-		return add_query_arg( array_merge( array( 'page' => 'update-airlock' ), $args ), admin_url( 'tools.php' ) );
+		$base = is_multisite() ? network_admin_url( 'settings.php' ) : admin_url( 'tools.php' );
+		return add_query_arg( array_merge( array( 'page' => 'update-airlock' ), $args ), $base );
+	}
+
+	/**
+	 * Capability that allows managing updates; on multisite, the network-level one.
+	 *
+	 * @param string $kind plugin or theme.
+	 * @return string
+	 */
+	public static function cap( string $kind = 'plugin' ): string {
+		if ( is_multisite() ) {
+			return 'theme' === $kind ? 'manage_network_themes' : 'manage_network_plugins';
+		}
+		return 'theme' === $kind ? 'update_themes' : 'update_plugins';
+	}
+
+	/**
+	 * Link to one event's report.
+	 *
+	 * @param int $event_id Event id.
+	 * @return string
+	 */
+	public static function event_url( int $event_id ): string {
+		return self::url(
+			array(
+				'view' => 'event',
+				'id'   => $event_id,
+			)
+		);
 	}
 }
