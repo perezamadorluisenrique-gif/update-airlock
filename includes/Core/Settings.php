@@ -45,7 +45,7 @@ class Settings {
 	 * @return array<string,mixed>
 	 */
 	public static function all(): array {
-		$saved = get_option( self::OPTION, array() );
+		$saved = Opt::get( self::OPTION, array() );
 		return array_merge( self::defaults(), is_array( $saved ) ? $saved : array() );
 	}
 

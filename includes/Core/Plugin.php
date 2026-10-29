@@ -55,7 +55,7 @@ class Plugin {
 		if ( ! $fs ) {
 			return;
 		}
-		$swap = get_option( 'updlock_swap' );
+		$swap = Opt::get( 'updlock_swap' );
 		foreach ( (array) glob( Fs::upgrade_dir() . '/updlock-*' ) as $path ) {
 			$in_use = is_array( $swap ) && in_array( $path, array( (string) ( $swap['trash'] ?? '' ), (string) ( $swap['work'] ?? '' ) ), true );
 			if ( ! $in_use && time() - (int) filemtime( $path ) > DAY_IN_SECONDS ) {

@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Updlock\Admin;
 
 use Updlock\Check\Runner;
+use Updlock\Core\Opt;
 use Updlock\Core\Settings;
 use Updlock\Snapshot\Restorer;
 use Updlock\Upgrade\Journal;
@@ -35,24 +36,41 @@ class Page {
 	 * Registers admin hooks.
 	 */
 	public static function register(): void {
-		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
+		// On multisite the screen lives only in the network admin; sites get no menu.
+		add_action( is_multisite() ? 'network_admin_menu' : 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_init', array( __CLASS__, 'init' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'assets' ) );
-		add_action( 'admin_notices', array( __CLASS__, 'notices' ) );
-		add_filter( 'plugin_action_links_' . UPDLOCK_BASENAME, array( __CLASS__, 'action_links' ) );
+		add_action( is_multisite() ? 'network_admin_notices' : 'admin_notices', array( __CLASS__, 'notices' ) );
+		add_filter( ( is_multisite() ? 'network_admin_plugin_action_links_' : 'plugin_action_links_' ) . UPDLOCK_BASENAME, array( __CLASS__, 'action_links' ) );
+		add_action( 'network_admin_edit_updlock_settings', array( __CLASS__, 'save_network_settings' ) );
 	}
 
 	/**
 	 * Adds the Tools menu entry.
 	 */
 	public static function menu(): void {
-		self::$hook = (string) add_management_page(
+		$args       = array(
 			__( 'Update Airlock', 'update-airlock' ),
 			__( 'Update Airlock', 'update-airlock' ),
-			'update_plugins',
+			Labels::cap(),
 			'update-airlock',
-			array( __CLASS__, 'render' )
+			array( __CLASS__, 'render' ),
 		);
+		self::$hook = (string) ( is_multisite() ? add_submenu_page( 'settings.php', ...$args ) : add_management_page( ...$args ) );
+	}
+
+	/**
+	 * Saves the settings form posted from the network admin (options.php does not exist there).
+	 */
+	public static function save_network_settings(): void {
+		check_admin_referer( 'updlock_settings_group-options' );
+		if ( ! current_user_can( 'manage_network_options' ) || ! current_user_can( Labels::cap() ) ) {
+			wp_die( esc_html__( 'You are not allowed to do this.', 'update-airlock' ), 403 );
+		}
+		$input = isset( $_POST[ Settings::OPTION ] ) ? map_deep( wp_unslash( $_POST[ Settings::OPTION ] ), 'sanitize_textarea_field' ) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce checked above; Settings::sanitize() validates every field.
+		Opt::set( Settings::OPTION, Settings::sanitize( $input ) );
+		wp_safe_redirect( add_query_arg( 'settings-updated', 'true', Labels::url( array( 'tab' => 'settings' ) ) ) );
+		exit;
 	}
 
 	/**
@@ -72,12 +90,12 @@ class Page {
 		if ( wp_doing_ajax() ) {
 			return;
 		}
-		if ( get_transient( 'updlock_welcome' ) && current_user_can( 'update_plugins' ) && ! is_network_admin() ) {
+		if ( get_transient( 'updlock_welcome' ) && current_user_can( Labels::cap() ) && ! is_network_admin() ) {
 			delete_transient( 'updlock_welcome' );
 			wp_safe_redirect( Labels::url( array( 'tab' => 'welcome' ) ) );
 			exit;
 		}
-		if ( ! current_user_can( 'update_plugins' ) ) {
+		if ( ! current_user_can( Labels::cap() ) ) {
 			return;
 		}
 		Restorer::recover();
@@ -134,11 +152,11 @@ class Page {
 	 * Admin notices about held and rolled-back updates.
 	 */
 	public static function notices(): void {
-		if ( ! current_user_can( 'update_plugins' ) ) {
+		if ( ! current_user_can( Labels::cap() ) ) {
 			return;
 		}
 		$screen = get_current_screen();
-		if ( $screen && 'tools_page_update-airlock' === $screen->id ) {
+		if ( $screen && in_array( $screen->id, array( 'tools_page_update-airlock', 'settings_page_update-airlock-network' ), true ) ) {
 			return;
 		}
 		$lines = array();
@@ -157,7 +175,7 @@ class Page {
 	 * Draws the screen.
 	 */
 	public static function render(): void {
-		if ( ! current_user_can( 'update_plugins' ) ) {
+		if ( ! current_user_can( Labels::cap() ) ) {
 			wp_die( esc_html__( 'You are not allowed to do this.', 'update-airlock' ), 403 );
 		}
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only view parameters; every action is a nonce-checked admin-post request.
@@ -221,7 +239,7 @@ class Page {
 	 */
 	public static function recheck(): void {
 		check_ajax_referer( 'updlock_recheck' );
-		if ( ! current_user_can( 'update_plugins' ) ) {
+		if ( ! current_user_can( Labels::cap() ) ) {
 			wp_send_json_error( null, 403 );
 		}
 		Runner::maybe_refresh_baseline();

@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Updlock\Snapshot;
 
 use Updlock\Core\Fs;
+use Updlock\Core\Opt;
 use Updlock\Core\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -29,10 +30,10 @@ class Store {
 	 * @return string|\WP_Error
 	 */
 	public static function root() {
-		$sub = (string) get_option( 'updlock_snap_dir', '' );
+		$sub = (string) Opt::get( 'updlock_snap_dir', '' );
 		if ( ! preg_match( '/^[a-f0-9]{16}$/', $sub ) ) {
 			$sub = bin2hex( random_bytes( 8 ) );
-			update_option( 'updlock_snap_dir', $sub, false );
+			Opt::set( 'updlock_snap_dir', $sub, false );
 		}
 		$base = WP_CONTENT_DIR . '/updlock-snapshots';
 		$root = $base . '/' . $sub;
@@ -171,7 +172,7 @@ class Store {
 		);
 		$all   = self::all();
 		$all[] = $entry;
-		update_option( self::OPTION, $all, false );
+		Opt::set( self::OPTION, $all, false );
 		self::enforce_retention( $kind, $slug );
 		return $entry;
 	}
@@ -232,7 +233,7 @@ class Store {
 	 * @return array<int,array<string,mixed>>
 	 */
 	public static function all(): array {
-		$all = get_option( self::OPTION, array() );
+		$all = Opt::get( self::OPTION, array() );
 		return is_array( $all ) ? array_values( $all ) : array();
 	}
 
@@ -326,7 +327,7 @@ class Store {
 				$keep[] = $entry;
 			}
 		}
-		update_option( self::OPTION, $keep, false );
+		Opt::set( self::OPTION, $keep, false );
 	}
 
 	/**

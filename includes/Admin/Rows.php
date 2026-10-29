@@ -68,7 +68,7 @@ class Rows {
 	 * Takes the daily baseline when it is stale (at most once per page load).
 	 */
 	private static function maybe_baseline(): void {
-		if ( current_user_can( 'update_plugins' ) ) {
+		if ( current_user_can( Labels::cap() ) ) {
 			Runner::maybe_refresh_baseline();
 		}
 	}
@@ -105,7 +105,7 @@ class Rows {
 	 * @param string $to   Offered version.
 	 */
 	private static function message( string $kind, string $slug, string $to ): void {
-		if ( '' === $slug || ! current_user_can( 'theme' === $kind ? 'update_themes' : 'update_plugins' ) ) {
+		if ( '' === $slug || ! current_user_can( Labels::cap( $kind ) ) ) {
 			return;
 		}
 		$event = Events::find( $kind, $slug, $to );
@@ -131,7 +131,7 @@ class Rows {
 	 * Panel above the update lists.
 	 */
 	public static function panel(): void {
-		if ( ! current_user_can( 'update_plugins' ) ) {
+		if ( ! current_user_can( Labels::cap() ) ) {
 			return;
 		}
 		echo '<div class="updlock-panel"><h2>' . esc_html__( 'Update Airlock', 'update-airlock' ) . '</h2>';

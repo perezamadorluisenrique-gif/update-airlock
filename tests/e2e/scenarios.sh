@@ -26,8 +26,8 @@ auto_update() { $WP eval 'define( "DOING_CRON", true ); add_filter( "auto_update
 
 echo "-- environment"
 ok "$(ev 'echo class_exists( "ZipArchive" ) ? "zip" : "nozip";')" "zip" "ZipArchive available"
-ok "$(ev 'echo (int) get_option( "updlock_db_version" );')" "1" "schema version"
-ok "$(ev 'global $wpdb; echo (int) ( $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i", $wpdb->prefix . "updlock_events" ) ) !== null );')" "1" "events table exists"
+ok "$(ev 'echo (int) Updlock\Core\Opt::get( "updlock_db_version" );')" "1" "schema version"
+ok "$(ev 'global $wpdb; echo (int) ( $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM %i", $wpdb->base_prefix . "updlock_events" ) ) !== null );')" "1" "events table exists"
 $WP eval 'Updlock\Check\Runner::refresh_baseline();' >/dev/null 2>&1
 ok "$(ev 'echo count( Updlock\Check\Runner::baseline()["urls"] ) >= 3 ? "ok" : "few";')" "ok" "baseline captured"
 
@@ -141,9 +141,9 @@ TARGET=$CONTENT/plugins/fx-benign
 TRASH=$CONTENT/upgrade/updlock-trash-test
 mkdir -p "$CONTENT/upgrade"
 mv "$TARGET" "$TRASH"
-$WP eval 'update_option( "updlock_swap", array( "target" => "'"$TARGET"'", "trash" => "'"$TRASH"'", "work" => "", "id" => "'"$SNAP"'", "time" => time() - 600 ) ); Updlock\Snapshot\Restorer::recover();' >/dev/null 2>&1
+$WP eval 'Updlock\Core\Opt::set( "updlock_swap", array( "target" => "'"$TARGET"'", "trash" => "'"$TRASH"'", "work" => "", "id" => "'"$SNAP"'", "time" => time() - 600 ) ); Updlock\Snapshot\Restorer::recover();' >/dev/null 2>&1
 ok "$(treehash "$TARGET")" "$(treehash "$CONTENT/e2e/v1/fx-benign")" "folder put back from the trash"
-ok "$(ev 'echo false === get_option( "updlock_swap" ) ? "cleared" : "left";')" "cleared" "swap record cleared"
+ok "$(ev 'echo false === Updlock\Core\Opt::get( "updlock_swap" ) ? "cleared" : "left";')" "cleared" "swap record cleared"
 
 echo "-- snapshots with the PclZip fallback"
 flag pclzip true
@@ -175,6 +175,12 @@ echo '<?php $upgrading = '"$(date +%s)"';' > "$SITE/.maintenance"
 ev 'echo Updlock\Upgrade\Verifier::run( 990 ) ? "ran" : "deferred";' >/dev/null
 ok "$(ev 'echo Updlock\Upgrade\Journal::get( 990 )["state"];')" "verifying" "still waiting during maintenance"
 rm -f "$SITE/.maintenance"
+
+echo "-- an entry that was already judged is not judged again"
+$WP eval 'Updlock\Upgrade\Journal::set( 990, array( "state" => "committed" ) );' >/dev/null 2>&1
+ok "$(ev 'echo Updlock\Upgrade\Verifier::run( 990 ) ? "ran" : "skipped";')" "skipped" "committed entry skipped"
+ok "$(ev 'echo Updlock\Upgrade\Journal::get( 990 )["state"];')" "committed" "committed entry unchanged"
+ok "$(ev 'require_once ABSPATH . "wp-admin/includes/class-wp-upgrader.php"; echo WP_Upgrader::create_lock( "updlock_verify", 60 ) ? "free" : "stuck"; WP_Upgrader::release_lock( "updlock_verify" );')" "free" "verify lock is released"
 
 echo "-- debug.log has nothing from Update Airlock"
 if [ -f "$SITE/debug.log" ]; then

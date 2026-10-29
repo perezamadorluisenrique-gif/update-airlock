@@ -12,6 +12,7 @@ namespace Updlock\Admin;
 use Updlock\Check\Runner;
 use Updlock\Core\Events;
 use Updlock\Core\Fs;
+use Updlock\Core\Opt;
 use Updlock\Inspect\Engine;
 use Updlock\Inspect\Reports;
 
@@ -43,7 +44,7 @@ class Ajax {
 		$slug  = isset( $_POST['slug'] ) ? sanitize_text_field( wp_unslash( $_POST['slug'] ) ) : '';
 		$token = isset( $_POST['token'] ) ? sanitize_key( wp_unslash( $_POST['token'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
-		if ( ! current_user_can( 'theme' === $kind ? 'update_themes' : 'update_plugins' ) ) {
+		if ( ! current_user_can( Labels::cap( $kind ) ) ) {
 			wp_send_json_error( array( 'message' => __( 'You are not allowed to do this.', 'update-airlock' ) ), 403 );
 		}
 		if ( '' === $token ) {
@@ -195,7 +196,7 @@ class Ajax {
 	 */
 	public static function baseline(): void {
 		check_ajax_referer( 'updlock_baseline' );
-		if ( ! current_user_can( 'update_plugins' ) ) {
+		if ( ! current_user_can( Labels::cap() ) ) {
 			wp_send_json_error( null, 403 );
 		}
 		$url  = isset( $_POST['url'] ) ? esc_url_raw( wp_unslash( $_POST['url'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified above.
@@ -210,7 +211,7 @@ class Ajax {
 		$base                 = Runner::baseline();
 		$base['urls'][ $url ] = $res[ $url ];
 		$base['ts']           = time();
-		update_option( Runner::BASELINE, $base, false );
+		Opt::set( Runner::BASELINE, $base, false );
 		$status = (int) ( $res[ $url ]['status'] ?? 0 );
 		wp_send_json_success(
 			array(

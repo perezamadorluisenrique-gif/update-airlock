@@ -6,6 +6,7 @@
  * Version:           1.0.0
  * Requires at least: 6.6
  * Requires PHP:      7.4
+ * Network:           true
  * Author:            lenrique5454
  * Author URI:        https://profiles.wordpress.org/lenrique5454/
  * License:           GPL-2.0-or-later

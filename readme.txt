@@ -90,7 +90,7 @@ Open `wp-content/updlock-snapshots/` with an FTP client. The folder inside has a
 
 = Does it work with multisite? =
 
-It is built and tested for single sites in this version.
+Yes. Network-activate it (it cannot be activated for one site). The screen is under Network Admin > Settings > Update Airlock, and network administrators use it. Snapshots, history and settings are shared by the whole network, and the checks run against the main site and the pages you list for it.
 
 == External services ==
 
@@ -104,4 +104,4 @@ It makes two kinds of requests:
 == Changelog ==
 
 = 1.0.0 =
-* First release: update inspector with side-by-side diff, snapshots, page checks, automatic rollback, holds, email alerts, history with export, dashboard widget and Site Health tests.
+* First release: update inspector with side-by-side diff, snapshots, page checks, automatic rollback, holds, email alerts, history with export, dashboard widget, Site Health tests and multisite support.

@@ -31,7 +31,7 @@ class Mailer {
 		$site = wp_specialchars_decode( get_option( 'blogname' ), ENT_QUOTES );
 		/* translators: 1: site name, 2: short headline, 3: plugin or theme name, 4: version */
 		$subject = sprintf( __( '[%1$s] Update Airlock: %2$s - %3$s %4$s', 'update-airlock' ), $site, $headline, (string) $event['name'], (string) $event['to_ver'] );
-		$link    = admin_url( 'tools.php?page=update-airlock&view=event&id=' . (int) $event['id'] );
+		$link    = \Updlock\Admin\Labels::event_url( (int) $event['id'] );
 		$body    = $headline . "\n\n" . implode( "\n", $lines ) . "\n\n" . __( 'Full evidence:', 'update-airlock' ) . ' ' . $link . "\n";
 		wp_mail( Settings::recipients(), $subject, $body );
 	}

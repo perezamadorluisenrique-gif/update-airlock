@@ -46,14 +46,14 @@ class Activator {
 	 * Applies pending schema versions.
 	 */
 	public static function maybe_upgrade(): void {
-		$installed = (int) get_option( 'updlock_db_version', 0 );
+		$installed = (int) Opt::get( 'updlock_db_version', 0 );
 		if ( $installed >= UPDLOCK_DB_VERSION ) {
 			return;
 		}
 		if ( $installed < 1 ) {
 			self::schema_1();
 		}
-		update_option( 'updlock_db_version', UPDLOCK_DB_VERSION, true );
+		Opt::set( 'updlock_db_version', UPDLOCK_DB_VERSION, true );
 	}
 
 	/**

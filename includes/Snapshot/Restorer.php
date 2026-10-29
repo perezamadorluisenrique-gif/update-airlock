@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Updlock\Snapshot;
 
 use Updlock\Core\Fs;
+use Updlock\Core\Opt;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -115,7 +116,7 @@ class Restorer {
 			return new \WP_Error( 'updlock_verify', __( 'The snapshot failed its integrity check, so nothing was changed.', 'update-airlock' ) );
 		}
 
-		update_option(
+		Opt::set(
 			self::SWAP,
 			array(
 				'target' => $target,
@@ -128,7 +129,7 @@ class Restorer {
 		);
 		if ( file_exists( $target ) && ! $fs->move( Fs::remote( $target ), Fs::remote( $trash ), true ) ) {
 			$fs->delete( Fs::remote( $work ), true );
-			delete_option( self::SWAP );
+			Opt::delete( self::SWAP );
 			return new \WP_Error( 'updlock_move', __( 'The current copy could not be moved aside, so nothing was changed.', 'update-airlock' ) );
 		}
 		if ( ! $fs->move( Fs::remote( $work . '/' . $slug ), Fs::remote( $target ), true ) ) {
@@ -140,7 +141,7 @@ class Restorer {
 		}
 		$fs->delete( Fs::remote( $trash ), true );
 		$fs->delete( Fs::remote( $work ), true );
-		delete_option( self::SWAP );
+		Opt::delete( self::SWAP );
 		// Renames do not refresh the code cache; without this the old files can run for a few more seconds.
 		if ( is_dir( $target ) ) {
 			wp_opcache_invalidate_directory( $target );
@@ -160,11 +161,11 @@ class Restorer {
 	private static function put_back( $fs, string $target, string $trash, string $work ) {
 		$fs->delete( Fs::remote( $work ), true );
 		if ( ! file_exists( $trash ) ) {
-			delete_option( self::SWAP );
+			Opt::delete( self::SWAP );
 			return new \WP_Error( 'updlock_swap', __( 'The restore failed.', 'update-airlock' ) );
 		}
 		if ( $fs->move( Fs::remote( $trash ), Fs::remote( $target ), true ) ) {
-			delete_option( self::SWAP );
+			Opt::delete( self::SWAP );
 			return new \WP_Error( 'updlock_swap', __( 'The restore failed and the previous copy was put back.', 'update-airlock' ) );
 		}
 		/* translators: %s: folder path */
@@ -175,7 +176,7 @@ class Restorer {
 	 * Finishes or undoes a swap that was interrupted. Safe to call on every admin load.
 	 */
 	public static function recover(): void {
-		$swap = get_option( self::SWAP );
+		$swap = Opt::get( self::SWAP );
 		if ( ! is_array( $swap ) || empty( $swap['target'] ) || time() - (int) ( $swap['time'] ?? 0 ) < 120 ) {
 			return;
 		}
@@ -200,7 +201,7 @@ class Restorer {
 		if ( ! empty( $swap['work'] ) && file_exists( $swap['work'] ) ) {
 			$fs->delete( Fs::remote( $swap['work'] ), true );
 		}
-		delete_option( self::SWAP );
+		Opt::delete( self::SWAP );
 	}
 
 	/**

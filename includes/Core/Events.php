@@ -26,7 +26,7 @@ class Events {
 	 */
 	public static function table( string $name ): string {
 		global $wpdb;
-		return $wpdb->prefix . 'updlock_' . $name;
+		return $wpdb->base_prefix . 'updlock_' . $name;
 	}
 
 	/**
