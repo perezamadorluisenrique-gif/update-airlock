@@ -70,7 +70,7 @@ class Settings {
 		$input = is_array( $input ) ? $input : array();
 		$out   = array();
 		foreach ( array( 'hold_auto_high', 'confirm_manual_high', 'cancel_no_snapshot', 'auto_rollback', 'run_checks', 'keep_data' ) as $flag ) {
-			$out[ $flag ] = empty( $input[ $flag ] ) ? 0 : 1;
+			$out[ $flag ] = isset( $input[ $flag ] ) && rest_sanitize_boolean( $input[ $flag ] ) ? 1 : 0;
 		}
 		$out['keep_snapshots'] = max( 1, absint( $input['keep_snapshots'] ?? 3 ) );
 		$out['extra_urls']     = self::sanitize_urls( (string) ( $input['extra_urls'] ?? '' ) );

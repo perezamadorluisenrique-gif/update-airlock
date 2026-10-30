@@ -99,7 +99,7 @@ Update Airlock does not use a service run by its author and sends no data to one
 It makes two kinds of requests:
 
 1. When you press Inspect before an update, it downloads the update package from the address WordPress holds for that update, usually downloads.wordpress.org or the address the plugin or theme author declared. This is the same file WordPress downloads to install the update. Only the request for the file is made; no site data is sent. For wordpress.org: [Terms](https://wordpress.org/about/tos/) and [Privacy](https://wordpress.org/about/privacy/).
-2. For the checks, it requests pages of your own site (loopback requests). They go to your own site address.
+2. For the checks, it requests pages of your own site and the files of the updated plugin or theme (loopback requests). They go to your own site address and send no data elsewhere.
 
 == Changelog ==
 

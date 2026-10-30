@@ -54,7 +54,7 @@ class Actions {
 	 */
 	private static function item(): array {
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- guard() verified the nonce.
-		$kind = isset( $_POST['kind'] ) && 'theme' === $_POST['kind'] ? 'theme' : 'plugin';
+		$kind = isset( $_POST['kind'] ) && 'theme' === sanitize_key( wp_unslash( $_POST['kind'] ) ) ? 'theme' : 'plugin';
 		$slug = isset( $_POST['slug'] ) ? sanitize_text_field( wp_unslash( $_POST['slug'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 		if ( ! Fs::valid_slug( $slug ) ) {
@@ -82,7 +82,7 @@ class Actions {
 	public static function confirm(): void {
 		check_admin_referer( 'updlock_confirm' );
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified on the line above.
-		$kind    = isset( $_POST['kind'] ) && 'theme' === $_POST['kind'] ? 'theme' : 'plugin';
+		$kind    = isset( $_POST['kind'] ) && 'theme' === sanitize_key( wp_unslash( $_POST['kind'] ) ) ? 'theme' : 'plugin';
 		$slug    = isset( $_POST['slug'] ) ? sanitize_text_field( wp_unslash( $_POST['slug'] ) ) : '';
 		$version = isset( $_POST['version'] ) ? sanitize_text_field( wp_unslash( $_POST['version'] ) ) : '';
 		$event   = isset( $_POST['event'] ) ? absint( $_POST['event'] ) : 0;
@@ -126,7 +126,7 @@ class Actions {
 		$id    = isset( $_POST['snapshot'] ) ? sanitize_key( wp_unslash( $_POST['snapshot'] ) ) : '';
 		$entry = Store::get( $id );
 		self::guard( 'rollback', $entry ? (string) $entry['kind'] : '' );
-		$with_options = ! empty( $_POST['options'] );
+		$with_options = isset( $_POST['options'] ) && rest_sanitize_boolean( sanitize_text_field( wp_unslash( $_POST['options'] ) ) );
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 		if ( ! $entry ) {
 			self::back( __( 'That snapshot is not available.', 'update-airlock' ), 'error' );
@@ -196,7 +196,7 @@ class Actions {
 	public static function export(): void {
 		self::guard( 'export' );
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- guard() verified the nonce.
-		$format = isset( $_POST['format'] ) && 'json' === $_POST['format'] ? 'json' : 'csv';
+		$format = isset( $_POST['format'] ) && 'json' === sanitize_key( wp_unslash( $_POST['format'] ) ) ? 'json' : 'csv';
 		$kind   = isset( $_POST['kind'] ) ? sanitize_key( wp_unslash( $_POST['kind'] ) ) : '';
 		$risk   = isset( $_POST['risk'] ) ? sanitize_key( wp_unslash( $_POST['risk'] ) ) : '';
 		$state  = isset( $_POST['state'] ) ? sanitize_key( wp_unslash( $_POST['state'] ) ) : '';

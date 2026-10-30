@@ -308,7 +308,7 @@ class Views {
 		$kind  = isset( $_GET['kind'] ) ? sanitize_key( wp_unslash( $_GET['kind'] ) ) : '';
 		$risk  = isset( $_GET['risk'] ) ? sanitize_key( wp_unslash( $_GET['risk'] ) ) : '';
 		$state = isset( $_GET['state'] ) ? sanitize_key( wp_unslash( $_GET['state'] ) ) : '';
-		$paged = isset( $_GET['paged'] ) ? max( 1, absint( $_GET['paged'] ) ) : 1;
+		$paged = isset( $_GET['paged'] ) ? max( 1, absint( wp_unslash( $_GET['paged'] ) ) ) : 1;
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		$kind  = in_array( $kind, array( 'plugin', 'theme' ), true ) ? $kind : '';
 		$risk  = in_array( $risk, array( 'low', 'review', 'high' ), true ) ? $risk : '';
