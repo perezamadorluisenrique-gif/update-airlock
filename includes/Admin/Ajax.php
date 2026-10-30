@@ -40,7 +40,7 @@ class Ajax {
 	public static function inspect(): void {
 		check_ajax_referer( 'updlock_inspect' );
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Verified on the line above.
-		$kind  = isset( $_POST['kind'] ) && 'theme' === $_POST['kind'] ? 'theme' : 'plugin';
+		$kind  = isset( $_POST['kind'] ) && 'theme' === sanitize_key( wp_unslash( $_POST['kind'] ) ) ? 'theme' : 'plugin';
 		$slug  = isset( $_POST['slug'] ) ? sanitize_text_field( wp_unslash( $_POST['slug'] ) ) : '';
 		$token = isset( $_POST['token'] ) ? sanitize_key( wp_unslash( $_POST['token'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Missing

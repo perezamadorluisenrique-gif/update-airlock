@@ -67,7 +67,7 @@ class Page {
 		if ( ! current_user_can( 'manage_network_options' ) || ! current_user_can( Labels::cap() ) ) {
 			wp_die( esc_html__( 'You are not allowed to do this.', 'update-airlock' ), 403 );
 		}
-		$input = isset( $_POST[ Settings::OPTION ] ) ? map_deep( wp_unslash( $_POST[ Settings::OPTION ] ), 'sanitize_textarea_field' ) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Nonce checked above; Settings::sanitize() validates every field.
+		$input = isset( $_POST[ Settings::OPTION ] ) ? map_deep( wp_unslash( $_POST[ Settings::OPTION ] ), 'sanitize_textarea_field' ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- map_deep sanitizes every value; Settings::sanitize() then validates each field.
 		Opt::set( Settings::OPTION, Settings::sanitize( $input ) );
 		wp_safe_redirect( add_query_arg( 'settings-updated', 'true', Labels::url( array( 'tab' => 'settings' ) ) ) );
 		exit;

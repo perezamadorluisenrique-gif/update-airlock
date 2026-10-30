@@ -28,6 +28,32 @@ function absint( $value ) {
 	return abs( (int) $value );
 }
 
+function rest_sanitize_boolean( $value ) {
+	if ( is_string( $value ) ) {
+		$value = strtolower( $value );
+		if ( in_array( $value, array( 'false', '0' ), true ) ) {
+			$value = false;
+		}
+	}
+	return (bool) $value;
+}
+
+function home_url( $path = '' ) {
+	return 'https://example.org' . $path;
+}
+
+function esc_url_raw( $url ) {
+	return filter_var( $url, FILTER_VALIDATE_URL ) ? $url : '';
+}
+
+function sanitize_email( $email ) {
+	return trim( $email );
+}
+
+function is_email( $email ) {
+	return (bool) filter_var( $email, FILTER_VALIDATE_EMAIL );
+}
+
 spl_autoload_register(
 	static function ( $class_name ) {
 		if ( 0 !== strpos( $class_name, 'Updlock\\' ) ) {
