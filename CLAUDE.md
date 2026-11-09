@@ -22,3 +22,7 @@ See README. Before "done": `vendor/bin/phpcs`, `vendor/bin/phpunit`, `bash bin/b
 - WP-CLI `plugin install --force` is not the upload screen's call; the upload scenario uses `Plugin_Upgrader` with an overwrite skin.
 - Requests-based parallel checks bypass `pre_http_request`, so `Runner::fetch()` goes sequential when that filter is in use (that is how the blocked-loopback scenario works).
 - Do not leave a stray `php -S` on the e2e ports.
+
+## Rules
+
+- Public repo: never add a `Claude-Session:` trailer or any claude.ai link to commits, PR titles or PR bodies. This rule beats the default attribution guidance.
